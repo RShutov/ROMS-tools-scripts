@@ -20,12 +20,12 @@ nc = netcdf(fileList(1).name, 'read');
 zeta = nc{'zeta'}(:).data;
 [ntimes, L, M] = size(zeta);
 disp(' ')
-disp(['xi_rho = ', xi_rho])
+disp(['xi_rho = ', int2str(xi_rho)])
 disp(' ')
 
 disp(' ')
-disp(['eta_rho = ', eta_rho])
-disp(' '),
+disp(['eta_rho = ', int2str(eta_rho)])
+disp(' ')
 
 % getting initial model timestamp
 initTimeText = nc{'dstart'}.units(12:end,1);
@@ -33,32 +33,28 @@ t = datetime(initTimeText,'TimeZone','local','Format',formatIn);
 ortimestamp = (datenum(t) - datenummx(1970,1,1,0,0,0)) * 86400;
 
 close(nc);
+if initfileIDX
+    idx = initfileIDX;
+else
+    idx = 1;c
+end
 
-for fileIdx=1:(size(fileList))
-    hfname = fileList(fileIdx).name;
-    disp(' ')
-    disp(['Read nc file = ', hfname])
-    disp(' ')
-    nc = netcdf(hfname,'read');
-    zeta = nc{'zeta'}(:).data;
-    oceantime = nc{'ocean_time'}(:);
-    [F,S,T] = size(zeta) ;
-    for buf=1:F
-        average = average + zeta(buf,eta_rho,xi_rho);
+if endFileIDX
+    if size(fileList) < endFileIDX
+        disp('wrond fidx param, max is', size(fileList))
+        return
+    else
+        fidx = endFileIDX;
     end
-    dataOut = [dataOut, zeta(:,eta_rho,xi_rho)'];
-    
-    
-    for i=1:ntimes
-        % conver from unix to matlab date format
-        unix_time = oceantime(i) + ortimestamp;
-        fdate = unix_time./86400 + datenummx(1970,1,1,0,0,0);
-        %sdate = datestr(fdate,'yyyy-mm-dd HH:MM:SS');
-        dates = [dates, datetime(fdate,'ConvertFrom','datenum')];
-        %disp([sdate,num2str(zeta(i,xi_rho,eta_rho))]);
-    end
-    close(nc);
-    %plot(dates,out);
+else
+    fidx = size(fileList);
+end
+
+for fileIdx=idx:fidx
+    [do, dt, a] = getZeta(fileList1(fileIdx).name, xi_rho, eta_rho, ortimestamp);
+    dataOut = [dataOut, do];
+    dates = [dates, dt];
+    average = average + a;
 end
 %plot(dates,dataOut);
 [F,S] = size(dataOut);
