@@ -16,18 +16,24 @@ initfileIDX = 1;
 endFileIDX = 0;
 
 dataPath = 'c:/Shared/';
+
 %
-%write a log
+% write a log
 %   1: write
 %   0: not frite
 %
+
 log = 0;
-%Plot data 
+
+% Plot data
 % 1: only model data
 % 2: only exp data
 % 3: model and exp
 % 4: mdoel and exp with sych
 % 0: not plot
 
-plotData = 1;
-getMedvedData
+plotData = 2;
+
+%observation data
+
+[ozeta, odates] = getObservData('medvedData.txt');

@@ -67,8 +67,8 @@ end
 %Synchronize data
 if (plotData == 4)
     initLength = length(dates);
-    dates = dates(dates >= medvedTimes(1));
-     dates = dates(dates <= medvedTimes(end));
+    dates = dates(dates >= odates(1));
+     dates = dates(dates <= odates(end));
     buf = length(dates);
     dataOut = dataOut(initLength - buf+1:end);
 end
@@ -88,11 +88,11 @@ end
 
 figure
 if (plotData == 1)
-    plot(dates,dataOut);
+    plot(dates, dataOut);
 elseif (plotData == 2)
-    plot(medvedTimes,medvedZeta);
+    plot(odates, ozeta);
 elseif (plotData ~= 0)
-    plot(dates,dataOut,'b',medvedTimes,medvedZeta,'g');
+    plot(dates,dataOut,'b', odates, ozeta,'g');
 end
 
 
