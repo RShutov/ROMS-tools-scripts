@@ -4,11 +4,16 @@
 
 
 
-%lon = 141.585593;
-%lat = 55.161955;
-lon = 163.7;
-lat = 62;
+lon = 141.585593;
+lat = 55.161955;
+%lon = 163.7;
+%lat = 62;
 workDir = '';
+
+% file start/end params
+
+initfileIDX = 1;
+endFileIDX = 0;
 
 dataPath = 'c:/Shared/';
 %
