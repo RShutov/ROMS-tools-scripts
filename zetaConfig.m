@@ -1,39 +1,45 @@
-%=========================================================
-% Configuration file
-%=========================================================
+%=========================================================================%
+%  Кофигурационный файл                                                   %
+%=========================================================================%
 
-
-
+% координаты точки
+%lon = 148.0333333333;
+%lat = 58.31215;
 lon = 141.585593;
 lat = 55.161955;
-%lon = 163.7;
-%lat = 62;
+
+% рабочая директория
 workDir = '';
 
-% file start/end params
-
-initfileIDX = 1;
+% индексы начала/конца выбоки данных
+initfileIDX = 150;
 endFileIDX = 0;
 
-dataPath = 'c:/Shared/';
+
+% путь к данным модели
+dataPath = 'e:/Рома/Диплом/ROMS/DATA/26.04/';
 
 %
-% write a log
-%   1: write
-%   0: not frite
+% Запись лога
+%   1: вести запись лога
+%   0: не вести запись лога
 %
 
-log = 0;
+log = 1;
+logObs = 1;
+logPath = 'E:\zetalog.txt';
+logObsPath = 'E:\obslog.txt';
 
-% Plot data
-% 1: only model data
-% 2: only exp data
-% 3: model and exp
-% 4: mdoel and exp with sych
-% 0: not plot
+% Вывод графиков 
+% 1: только данные модели
+% 2: только данные наблюдений
+% 3: модель и наблюдения
+% 4: модель и наблюдения с синхронизацией
+% 0: не выводить графики
 
-plotData = 2;
+plotData = 4;
 
-%observation data
-
-[ozeta, odates] = getObservData('medvedData.txt');
+% данные наблюдений
+ofile = 'magadanData.txt';
+odir = 'e:\Рома\Диплом\ROMS\OB_DATA\';
+[ozeta, odates] = getObservData([odir, ofile]);
