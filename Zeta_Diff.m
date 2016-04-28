@@ -1,14 +1,19 @@
-%==================================
-%   zetaDiff.m
-%==================================
+%=========================================================================%
+%   Zeta_Diff.m                                                           %
+%   Сравнение двух наборов данных модели в точке                          %
+%=========================================================================%
 
 format long
 zetaConfig
 formatIn = 'yyyy-MM-dd HH:mm:ss';
-% refNum is a timestamp
-% datestr(refNum,'yyyy-mm-dd HH:MM:SS.FFF');
-fileList1 = dir([dataPath, '*.nc']);
-fileList2 = dir([dataPath, '/test/*.nc']);
+
+% пути к каталогам данных модели
+path1 = '/test/';
+path2 = '/test2/';
+
+
+fileList1 = dir([dataPath, path1, '*.nc']);
+fileList2 = dir([dataPath, path2, '*.nc']);
 
 
 average = 0;
@@ -18,9 +23,9 @@ dates2 = [];
 dataOut =[];
 dataOut2 = [];
 
-% get xi, etha
-[xi_rho, eta_rho] = getRHO(fileList(1).name, lon, lat);
-nc = netcdf(fileList(1).name, 'read');
+[xi_rho, eta_rho] = getRHO(fileList1(1).name, lon, lat);
+
+nc = netcdf(fileList1(1).name, 'read');
 zeta = nc{'zeta'}(:).data;
 [ntimes, L, M] = size(zeta);
 disp(' ')
@@ -31,7 +36,7 @@ disp(' ')
 disp(['eta_rho = ', int2str(eta_rho)])
 disp(' '),
 
-% getting initial model timestamp
+
 initTimeText = nc{'dstart'}.units(12:end,1);
 t = datetime(initTimeText,'TimeZone','local','Format',formatIn);
 ortimestamp = (datenum(t) - datenummx(1970,1,1,0,0,0)) * 86400;
@@ -44,26 +49,22 @@ else
 end
 
 if endFileIDX
-    if (length(fileList) >= endFileIDX) || (length(fileList2) >= endFileIDX) 
+    if (endFileIDX > length(fileList1)) || (endFileIDX > length(fileList2)) 
         disp(['wrond fidx param, max is ', int2str(length(fileList))])
         return
     else
         fidx = endFileIDX;
     end
 else
-    fidx = min(length(fileList),length(fileList2));
+    fidx = min(length(fileList1),length(fileList2)) - 1;
 end
 
-% read files
-
 for fileIdx=idx:fidx
-    [do, dt, a] = getZeta(fileList1(fileIdx).name, xi_rho, eta_rho, ortimestamp);
+    [do, dt, a] = getZeta([path1, fileList1(fileIdx).name], xi_rho, eta_rho, ortimestamp);
     dataOut = [dataOut, do];
     dates = [dates, dt];
     average = average + a;
 end
-
-% plot(dates,dataOut);
 
 [~, S] = size(dataOut);
 average = average./ S;
@@ -75,13 +76,11 @@ end
 average = 0;
 
 for fileIdx=idx:fidx
-    [do, dt, a] = getZeta(fileList2(fileIdx).name, xi_rho, eta_rho, ortimestamp);
+    [do, dt, a] = getZeta([path2, fileList2(fileIdx).name], xi_rho, eta_rho, ortimestamp);
     dataOut2 = [dataOut2, do];
     dates2 = [dates2, dt];
     average = average + a;
 end
-
-% plot(dates, dataOut2);
 
 [~, S] = size(dataOut2);
 average = average./ S;

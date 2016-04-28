@@ -1,22 +1,30 @@
-%==================================
-%   getZeta.m
-%==================================
+%=========================================================================%
+%   getZeta.m                                                             %
+%   Получение значения переменной zeta в заданной точке в history-файлах  %
+%=========================================================================%
+
+
+clear all
+close all
 format long
 zetaConfig
+
+% путь к папке с hystory-файлами
+
 fileList = dir([dataPath, '*.nc']);
 formatIn = 'yyyy-MM-dd HH:mm:ss';
-%refNum is a timestamp
-%datestr(refNum,'yyyy-mm-dd HH:MM:SS.FFF');
 
-
-% array of zeta data
+% масив данных переменной zeta 
 dataOut = [];
 average = 0;
-% array of dates
+
+% массив дат
 dates = [];
 
-[xi_rho, eta_rho] = getRHO(fileList(1).name, lon, lat);
-nc = netcdf(fileList(1).name, 'read');
+% получение значений в RHO координатах из долготы и широты
+[xi_rho, eta_rho] = getRHO([dataPath, fileList(1).name], lon, lat);
+
+nc = netcdf([dataPath, fileList(1).name], 'read');
 zeta = nc{'zeta'}(:).data;
 [ntimes, L, M] = size(zeta);
 disp(' ')
@@ -27,21 +35,22 @@ disp(' ')
 disp(['eta_rho = ', int2str(eta_rho)])
 disp(' ')
 
-% getting initial model timestamp
+% получение значения времени инициализации модели
 initTimeText = nc{'dstart'}.units(12:end,1);
-t = datetime(initTimeText,'TimeZone','local','Format',formatIn);
-ortimestamp = (datenum(t) - datenummx(1970,1,1,0,0,0)) * 86400;
+t = datetime(initTimeText, 'TimeZone', 'Europe/London', 'Format', formatIn);
+t2 = datetime(1970,1,1,0,0,0,'TimeZone','Europe/London');
+ortimestamp = datenum(t - t2) * 86400;
 
 close(nc);
 if initfileIDX
     idx = initfileIDX;
 else
-    idx = 1;c
+    idx = 1;
 end
 
 if endFileIDX
     if size(fileList) < endFileIDX
-        disp('wrond fidx param, max is', size(fileList))
+        disp('неверный параметр fidx ,  максимальный: ', size(fileList))
         return
     else
         fidx = endFileIDX;
@@ -50,13 +59,16 @@ else
     fidx = size(fileList);
 end
 
+
+% получение zeta
 for fileIdx=idx:fidx
-    [do, dt, a] = getZeta(fileList1(fileIdx).name, xi_rho, eta_rho, ortimestamp);
+    [do, dt, a] = getZeta([dataPath, fileList(fileIdx).name], xi_rho, eta_rho, ortimestamp);
     dataOut = [dataOut, do];
     dates = [dates, dt];
     average = average + a;
 end
-%plot(dates,dataOut);
+
+% приведение к среднему
 [F,S] = size(dataOut);
 average = average./ S;
 disp(average);
@@ -64,23 +76,44 @@ for i=1:S
     dataOut(1,i) = dataOut(1,i) - average;
 end
 
-%Synchronize data
+% синхронизация
 if (plotData == 4)
-    initLength = length(dates);
-    dates = dates(dates >= odates(1));
-     dates = dates(dates <= odates(end));
-    buf = length(dates);
-    dataOut = dataOut(initLength - buf+1:end);
+    start = 0;
+    endd = 0;
+    for i=1:length(dates)
+        if (start == 0) &&  (dates(i) >= odates(1))
+            start = i;
+           
+        end
+        if (dates(i) <= odates(end))
+            endd = i;
+        end
+    end
+    dates = dates(start:endd);
+    dataOut = dataOut(start:endd);
 end
 
-%Data output
+% вывод графиков
+if (logObs == 1)
+    OutputID = fopen(logObsPath,'w');
+    if (OutputID == -1)
+        disp('Cannot write a log')
+    else
+        for i=1:length(odates)
+            fprintf(OutputID, '%s %f\n', datestr(odates(i),'dd/mm/yyyy HH:MM:SS'), ozeta(i));
+        end
+        fclose(OutputID)
+    end
+end
+
+% запись лога
 if (log == 1)
-    OutputID = fopen('E:\zetalog.txt','w');
+    OutputID = fopen(logPath,'w');
     if (OutputID == -1)
         disp('Cannot write a log')
     else
         for i=1:length(dates)
-            fprintf(OutputID, '%s : %f\n', datestr(dates(i),'yyyy-mm-dd HH:MM:SS'), dataOut(i));
+            fprintf(OutputID, '%s %f\n', datestr(dates(i),'dd/mm/yyyy HH:MM:SS'), dataOut(i));
         end
         fclose(OutputID)
     end
@@ -92,10 +125,10 @@ if (plotData == 1)
 elseif (plotData == 2)
     plot(odates, ozeta);
 elseif (plotData ~= 0)
-    plot(dates,dataOut,'b', odates, ozeta,'g');
+    plot(dates, dataOut, 'b', odates, ozeta,'g');
 end
 
 
-title(['Graph of sea surface since ',initTimeText]);
-xlabel('date') % x-axis label
-ylabel('height, m') % y-axis label
+title(['Уровень водной поверхности с ',initTimeText]);
+xlabel('дата') % x-axis label
+ylabel('высота, m') % y-axis label
